@@ -1,0 +1,41 @@
+# Define the path to the zip file
+$zipFilePath = "C:\Temp\Software\WINDOWS.X64_193000_client.zip"
+
+# Define the destination directory where you want to extract the contents
+$destinationDirectory = "C:\Temp\Software\Oraclecclient"
+
+# Create the destination directory if it doesn't exist
+New-Item -ItemType Directory -Force -Path $destinationDirectory
+
+# Use Expand-Archive to extract the contents of the zip file
+Expand-Archive -Path $zipFilePath -DestinationPath $destinationDirectory
+
+#install oracle client using response file
+# Define the path to the Oracle Client installer executable
+$installerPath = "C:\Temp\Software\Oraclecclient\client\setup.exe"
+
+# Define the path to your response file
+$responseFilePath = "C:\Temp\Software\oclient_response\client.rsp"
+
+# Build the command to run the installer with the response file
+$installCommand = "$installerPath -silent -nowait -responseFile $responseFilePath"
+
+# Start the installation process
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c $installCommand" -Wait -Verbose
+#Start-Process -FilePath $installerPath -ArgumentList @("/silent", "/responseFile=$responseFilePath") -Wait -Verbose
+
+
+
+# Define the path to the Oracle wallet directory
+$walletDirectory = "C:\Program Files\Oracleclient1\product\19.0.0\client_1\ssl_wallet"
+# Create the Oracle wallet directory if it doesn't exist
+if (-not (Test-Path $walletDirectory -PathType Container)) {
+    New-Item -Path $walletDirectory -ItemType Directory
+}
+# Set the environment variables for Oracle utilities (adjust paths based on your Oracle installation)
+$env:ORACLE_HOME = "C:\Program Files\Oracleclient1\product\19.0.0\client_1"
+$env:PATH += ";$env:ORACLE_HOME\bin"
+
+#create directory
+Invoke-Expression -Command 'orapki wallet create -wallet $ORACLE_HOME/ssl_wallet -auto_login_only'
+Invoke-Expression -Command 'orapki wallet add -wallet $ORACLE_HOME/ssl_wallet -trusted_cert -cert $ORACLE_HOME/ssl_wallet/rds-ca-2019-root.pem -auto_login_only '    
